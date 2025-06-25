@@ -1,0 +1,65 @@
+# docker-compose.yml
+version: '3.8' # ใช้เวอร์ชันที่ใหม่กว่า 2.x
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d/ # <--- **สำคัญมาก! เพิ่มบรรทัดนี้เข้ามา**
+    healthcheck: # เพิ่ม Healthcheck เพื่อให้ backend รอ db ได้อย่างสมบูรณ์
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - todo-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      DB_USER: ${POSTGRES_USER}
+      DB_HOST: db # ชื่อ service ของ database
+      DB_DATABASE: ${POSTGRES_DB}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PORT: 5432
+      PORT: 3001
+    depends_on:
+      db:
+        condition: service_healthy # <--- Backend จะรอจนกว่า DB จะพร้อมใช้งาน
+    networks:
+      - todo-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # นี่คือตัวแปรที่ถูกส่งไปยัง Dockerfile ในระหว่างการ build
+        # ถ้าเป็น Next.js ควรขึ้นต้นด้วย NEXT_PUBLIC_
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:3001 # สำหรับการเข้าถึงจาก browser ของผู้ใช้
+        BACKEND_URL_INTERNAL: http://backend:3001 # สำหรับการเข้าถึงจาก frontend server (SSR) ภายใน Docker network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend # ให้แน่ใจว่า backend พร้อมก่อน frontend จะเริ่ม
+    environment: # หาก frontend มีส่วนที่เป็น server-side rendering ที่ต้องการ env vars ตอนรัน
+      NODE_ENV: production
+      # อาจจะไม่มีความจำเป็นต้องใส่ NEXT_PUBLIC_BACKEND_URL ตรงนี้อีก หากมันถูกฝังตอน build แล้ว
+      # แต่ถ้ามีโค้ดที่ต้องการมันตอนรัน ก็สามารถใส่ได้
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:3001
+      BACKEND_URL_INTERNAL: http://backend:3001
+    networks:
+      - todo-network
+
+volumes:
+  db-data:
+
+networks:
+  todo-network:
+    driver: bridge

@@ -1,0 +1,14 @@
+# my-todo-app/backend/Dockerfile (ส่วนที่แก้ไข)
+FROM node:20-alpine
+
+WORKDIR /app/src 
+
+COPY package.json package-lock.json ./../
+RUN npm install --prefix ./../
+
+COPY . . 
+COPY .env /app/.env 
+
+EXPOSE 3001 
+
+CMD ["node", "src/index.js"]
