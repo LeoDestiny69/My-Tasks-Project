@@ -1,0 +1,41 @@
+# .github/workflows/deploy.yml
+name: Deploy Next.js to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # รัน workflow เมื่อมีการ push ไปที่ branch main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # ใช้ Ubuntu (Linux) เพื่อหลีกเลี่ยงปัญหา Windows path/command length
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies 🔧
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build Next.js Static Export 🏗️
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Add .nojekyll file 📄
+        run: touch frontend/out/.nojekyll
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/out # <--- ตรวจสอบว่าตรงนี้ถูกต้อง
+          publish_branch: gh-pages # <--- ตรวจสอบว่าตรงนี้ถูกต้อง
+          # cname: example.com # ถ้าคุณมี Custom Domain

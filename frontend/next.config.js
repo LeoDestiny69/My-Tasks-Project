@@ -1,6 +1,12 @@
-// frontend/next.config.mjs
+// frontend/next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export', 
+
+  images: {
+    unoptimized: true, 
+  },
+
   experimental: {
     swcMinify: true,
     forceSwcTransforms: true,
