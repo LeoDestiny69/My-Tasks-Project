@@ -10,7 +10,7 @@ const nextConfig = {
     forceSwcTransforms: true,
   },
   
-  basePath: '/My-Tasks-Project', 
+  basePath: 'My-Tasks-Project', 
 };
 
 export default nextConfig;

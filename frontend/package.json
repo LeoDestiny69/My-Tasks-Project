@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "homepage": "https://LeoDestiny69.github.io/My-Tasks-Project/",
+  "homepage": "https://leodestiny69.github.io/My-Tasks-Project/",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
