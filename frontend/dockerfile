@@ -1,0 +1,62 @@
+# frontend/Dockerfile
+
+# Stage 1: Build the frontend application
+FROM node:18-alpine AS builder
+
+# รับ build arguments จาก docker-compose.yml
+ARG NEXT_PUBLIC_BACKEND_URL
+ARG BACKEND_URL_INTERNAL
+
+# กำหนดให้เป็น Environment Variables เพื่อให้ npm build สามารถเข้าถึงได้
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+ENV BACKEND_URL_INTERNAL=${BACKEND_URL_INTERNAL}
+
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+RUN npm install
+
+COPY . .
+
+# บรรทัด Debugging Env Vars ใน Stage Build (ควรจะแสดงค่าที่ถูกส่งผ่าน ARG/ENV)
+RUN echo "--- Debugging Env Vars in Builder Stage (before build) ---"
+RUN printenv NEXT_PUBLIC_BACKEND_URL || echo "ERROR: NEXT_PUBLIC_BACKEND_URL is UNDEFINED in BUILDER STAGE"
+RUN printenv BACKEND_URL_INTERNAL || echo "ERROR: BACKEND_URL_INTERNAL is UNDEFINED in BUILDER STAGE"
+RUN echo "---------------------------------------"
+
+
+# Build the frontend application
+RUN npm run build
+
+# Stage 2: Serve the frontend application
+FROM node:18-alpine AS runner
+
+# รับ build arguments อีกครั้งหากต้องการใช้ใน runner stage ด้วย
+# หรือใช้ ENV ที่ถูกกำหนดไว้แล้วหากมันถูกฝังในการ build stage
+ARG NEXT_PUBLIC_BACKEND_URL
+ARG BACKEND_URL_INTERNAL
+
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+ENV BACKEND_URL_INTERNAL=${BACKEND_URL_INTERNAL}
+
+
+WORKDIR /app
+
+# Copy built assets from the builder stage
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# บรรทัด Debugging Env Vars ใน Runner Stage (ตอนรันคอนเทนเนอร์)
+RUN echo "--- Debugging Env Vars in Runner Stage (after build, before CMD) ---"
+RUN printenv NEXT_PUBLIC_BACKEND_URL || echo "ERROR: NEXT_PUBLIC_BACKEND_URL is UNDEFINED in RUNNER STAGE"
+RUN printenv BACKEND_URL_INTERNAL || echo "ERROR: BACKEND_URL_INTERNAL is UNDEFINED in RUNNER STAGE"
+RUN echo "---------------------------------------"
+
+EXPOSE 3000
+
+CMD ["npm", "start"] 
