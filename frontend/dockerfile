@@ -28,6 +28,7 @@ RUN echo "---------------------------------------"
 
 
 # Build the frontend application
+# Next.js เมื่อใช้ output: 'export' จะสร้างไฟล์ static ในโฟลเดอร์ 'out'
 RUN npm run build
 
 # Stage 2: Serve the frontend application
@@ -44,10 +45,15 @@ ENV BACKEND_URL_INTERNAL=${BACKEND_URL_INTERNAL}
 
 WORKDIR /app
 
+# ติดตั้ง 'serve' package เพื่อใช้สำหรับ serve static files
+RUN npm install -g serve@latest
+
 # Copy built assets from the builder stage
+# สำคัญ: เมื่อใช้ output: 'export' เราต้อง copy โฟลเดอร์ 'out' แทน '.next'
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/out ./out 
+# COPY --from=builder /app/.next ./.next # <--- บรรทัดนี้ไม่จำเป็นแล้วเมื่อใช้ output: 'export'
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
@@ -59,4 +65,5 @@ RUN echo "---------------------------------------"
 
 EXPOSE 3000
 
-CMD ["npm", "start"] 
+# เปลี่ยนคำสั่งรัน: ใช้ 'serve' เพื่อ serve โฟลเดอร์ 'out' บนพอร์ต 3000
+CMD ["serve", "-s", "out", "-p", "3000"]

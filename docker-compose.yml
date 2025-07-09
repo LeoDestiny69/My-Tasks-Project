@@ -1,5 +1,4 @@
 # docker-compose.yml
-version: '3.8' # ใช้เวอร์ชันที่ใหม่กว่า 2.x
 services:
   db:
     image: postgres:15-alpine
