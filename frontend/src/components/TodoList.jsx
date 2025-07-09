@@ -21,8 +21,6 @@ export default function TodoList({ pendingTodos, completedTodos, isLoading, erro
     );
   }
 
-  // ไม่ต้องใช้ todos.length === 0 แล้ว เพราะเราแยกเป็น 2 ลิสต์
-  // ตรวจสอบแต่ละลิสต์แทน
 
   return (
     <div className="mt-8">

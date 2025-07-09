@@ -1,20 +1,20 @@
 // backend/index.js
 const express = require('express');
 const { Pool } = require('pg');
-const cors = require('cors'); // เพิ่ม cors
+const cors = require('cors'); 
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors()); // เปิดใช้งาน CORS สำหรับทุก requests
-app.use(express.json()); // สำหรับ parse JSON request bodies
+app.use(cors()); 
+app.use(express.json()); 
 
 // Database connection pool
 const pool = new Pool({
   user: process.env.DB_USER,
-  host: process.env.DB_HOST, // ควรจะเป็น 'db' เมื่อรันใน Docker
+  host: process.env.DB_HOST, 
   database: process.env.DB_DATABASE,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
@@ -39,7 +39,7 @@ pool.connect((err, client, release) => {
 // GET all todos
 app.get('/todos', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM todos ORDER BY created_at DESC'); // เรียงตามเวลาสร้าง
+    const result = await pool.query('SELECT * FROM todos ORDER BY created_at DESC'); 
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching todos:', err);
@@ -64,10 +64,9 @@ app.get('/todos/:id', async (req, res) => {
 
 // POST a new todo
 app.post('/todos', async (req, res) => {
-  // รับ title, description, due_date, priority จาก request body
   const { title, description, due_date, priority } = req.body;
 
-  // ตรวจสอบความถูกต้องของข้อมูล (Validation)
+  
   if (!title || typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Title is required and must be a non-empty string.' });
   }
@@ -75,7 +74,7 @@ app.post('/todos', async (req, res) => {
     return res.status(400).json({ error: 'Description must be a string.' });
   }
   if (due_date !== undefined && due_date !== null) {
-      // ตรวจสอบว่าเป็นรูปแบบวันที่ที่ถูกต้องหรือไม่
+      
       if (isNaN(new Date(due_date))) {
           return res.status(400).json({ error: 'Invalid due_date format.' });
       }
@@ -87,7 +86,7 @@ app.post('/todos', async (req, res) => {
   try {
     const result = await pool.query(
       'INSERT INTO todos (title, description, due_date, priority) VALUES ($1, $2, $3, $4) RETURNING *',
-      [title, description || null, due_date || null, priority || 'Medium'] // ใช้ null ถ้าไม่มีค่า
+      [title, description || null, due_date || null, priority || 'Medium'] 
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -99,25 +98,23 @@ app.post('/todos', async (req, res) => {
 // PUT (update) an existing todo
 app.put('/todos/:id', async (req, res) => {
   const { id } = req.params;
-  // รับค่าที่ต้องการอัปเดต (อาจจะส่งมาบางฟิลด์)
+  
   const { title, description, is_completed, due_date, priority } = req.body;
 
   try {
-    // ดึงข้อมูล todo เดิมมาก่อน เพื่อใช้ค่าเดิมหากไม่มีการส่งค่าใหม่มา
+    
     const existingTodo = await pool.query('SELECT * FROM todos WHERE id = $1', [id]);
     if (existingTodo.rows.length === 0) {
       return res.status(404).json({ error: 'Todo not found' });
     }
     const oldTodo = existingTodo.rows[0];
 
-    // กำหนดค่าที่จะอัปเดต โดยใช้ค่าใหม่ถ้ามี มิฉะนั้นใช้ค่าเดิม
     const updatedTitle = title !== undefined ? title : oldTodo.title;
     const updatedDescription = description !== undefined ? description : oldTodo.description;
     const updatedIsCompleted = is_completed !== undefined ? is_completed : oldTodo.is_completed;
     const updatedDueDate = due_date !== undefined ? due_date : oldTodo.due_date;
     const updatedPriority = priority !== undefined ? priority : oldTodo.priority;
 
-    // ตรวจสอบความถูกต้องของข้อมูลที่อัปเดต (Validation)
     if (updatedTitle === null || (typeof updatedTitle === 'string' && updatedTitle.trim() === '')) {
         return res.status(400).json({ error: 'Title cannot be empty.' });
     }
@@ -158,7 +155,7 @@ app.delete('/todos/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Todo not found' });
     }
-    res.status(204).send(); // 204 No Content for successful deletion
+    res.status(204).send(); 
   } catch (err) {
     console.error('Error deleting todo:', err);
     res.status(500).json({ error: 'Internal Server Error' });

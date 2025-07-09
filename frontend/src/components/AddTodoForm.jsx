@@ -1,16 +1,16 @@
-// frontend/src/components/AddTodoForm.jsx
+
 import React from 'react';
 
-// เพิ่ม props สำหรับ due_date และ priority
+
 export default function AddTodoForm({
   newTodoTitle,
   setNewTodoTitle,
   newTodoDescription,
   setNewTodoDescription,
-  newTodoDueDate,      // เพิ่ม props ใหม่
-  setNewTodoDueDate,   // เพิ่ม props ใหม่
-  newTodoPriority,     // เพิ่ม props ใหม่
-  setNewTodoPriority,  // เพิ่ม props ใหม่
+  newTodoDueDate,      
+  setNewTodoDueDate,   
+  newTodoPriority,     
+  setNewTodoPriority,  
   addTodo,
 }) {
   const handleSubmit = (e) => {
@@ -30,7 +30,7 @@ export default function AddTodoForm({
           className="input input-bordered w-full"
           value={newTodoTitle}
           onChange={(e) => setNewTodoTitle(e.target.value)}
-          required // บังคับกรอก title
+          required 
         />
       </div>
 
@@ -52,7 +52,7 @@ export default function AddTodoForm({
           <span className="label-text">Due Date (Optional)</span>
         </label>
         <input
-          type="datetime-local" // ใช้ type="date" สำหรับ Date Picker
+          type="datetime-local" 
           className="input input-bordered w-full"
           value={newTodoDueDate}
           onChange={(e) => setNewTodoDueDate(e.target.value)}

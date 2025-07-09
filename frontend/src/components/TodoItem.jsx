@@ -12,25 +12,22 @@ export default function TodoItem({ todo, toggleTodoStatus, deleteTodo }) {
 
   const formattedDate = new Date(todo.created_at).toLocaleString();
 
-  // แปลง due_date ให้แสดงผลสวยงาม (รวมเวลา)
+  
   const formattedDueDate = todo.due_date
-    ? new Date(todo.due_date).toLocaleString('en-US', { // เปลี่ยนจาก toLocaleDateString เป็น toLocaleString
+    ? new Date(todo.due_date).toLocaleString('en-US', { 
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',   // เพิ่ม hour เพื่อแสดงชั่วโมง
-        minute: '2-digit', // เพิ่ม minute เพื่อแสดงนาที
-        // second: '2-digit', // ถ้าต้องการแสดงวินาทีด้วย
-        // hour12: false // ถ้าต้องการรูปแบบ 24 ชั่วโมง (ค่า default มักจะเป็น 12-hour format พร้อม AM/PM)
+        hour: '2-digit',   
+        minute: '2-digit', 
       })
     : 'No due date';
 
-  // กำหนดสีตาม Priority (ใช้ Tailwind CSS)
   const priorityColorClass = {
     Low: 'text-gray-400',
     Medium: 'text-yellow-400',
     High: 'text-red-400',
-  }[todo.priority || 'Medium']; // ใช้ 'Medium' เป็นค่า default ถ้าไม่มี priority
+  }[todo.priority || 'Medium']; 
 
   return (
     <li

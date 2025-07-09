@@ -2,15 +2,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export', 
+
   images: {
     unoptimized: true, 
   },
+
+  // experimental settings เดิมของคุณ
   experimental: {
     swcMinify: true,
     forceSwcTransforms: true,
   },
-  
-  basePath: '/My-Tasks-Project', 
 };
 
 export default nextConfig;
