@@ -55,15 +55,18 @@ services:
       - todo-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`tomyummaster.duckdns.org`) && PathPrefix(`/todos`)"
+      - "traefik.http.routers.backend.rule=Host(`tomyummaster.duckdns.org`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.priority=20"
       - "traefik.http.services.backend.loadbalancer.server.port=3001"
+      - "traefik.http.middlewares.strip-prefix-api.stripprefix.prefixes=/api"
+      - "traefik.http.routers.backend.middlewares=strip-prefix-api"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_URL: https://tomyummaster.duckdns.org
+        NEXT_PUBLIC_BACKEND_URL: https://tomyummaster.duckdns.org/api
     depends_on:
       - backend
     networks:
