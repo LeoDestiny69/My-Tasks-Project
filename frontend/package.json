@@ -2,7 +2,6 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://LeoDestiny69.github.io/My-Tasks-Project/",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
