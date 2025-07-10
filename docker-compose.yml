@@ -1,5 +1,27 @@
 # docker-compose.yml
 services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=premier674@gmail.com" 
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik Dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    networks:
+      - todo-network
+
   db:
     image: postgres:15-alpine
     environment:
@@ -8,9 +30,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./db:/docker-entrypoint-initdb.d/ # <--- **สำคัญมาก! เพิ่มบรรทัดนี้เข้ามา**
-    healthcheck: # เพิ่ม Healthcheck เพื่อให้ backend รอ db ได้อย่างสมบูรณ์
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      - ./db:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -19,42 +41,39 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "3001:3001"
     environment:
       DB_USER: ${POSTGRES_USER}
-      DB_HOST: db # ชื่อ service ของ database
+      DB_HOST: db
       DB_DATABASE: ${POSTGRES_DB}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_PORT: 5432
       PORT: 3001
     depends_on:
       db:
-        condition: service_healthy # <--- Backend จะรอจนกว่า DB จะพร้อมใช้งาน
+        condition: service_healthy
     networks:
       - todo-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`tomyummaster.duckdns.org`) && PathPrefix(`/todos`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=3001"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # นี่คือตัวแปรที่ถูกส่งไปยัง Dockerfile ในระหว่างการ build
-        # ถ้าเป็น Next.js ควรขึ้นต้นด้วย NEXT_PUBLIC_
-        NEXT_PUBLIC_BACKEND_URL: http://localhost:3001 # สำหรับการเข้าถึงจาก browser ของผู้ใช้
-        BACKEND_URL_INTERNAL: http://backend:3001 # สำหรับการเข้าถึงจาก frontend server (SSR) ภายใน Docker network
-    ports:
-      - "3000:3000"
+        NEXT_PUBLIC_BACKEND_URL: https://tomyummaster.duckdns.org
     depends_on:
-      - backend # ให้แน่ใจว่า backend พร้อมก่อน frontend จะเริ่ม
-    environment: # หาก frontend มีส่วนที่เป็น server-side rendering ที่ต้องการ env vars ตอนรัน
-      NODE_ENV: production
-      # อาจจะไม่มีความจำเป็นต้องใส่ NEXT_PUBLIC_BACKEND_URL ตรงนี้อีก หากมันถูกฝังตอน build แล้ว
-      # แต่ถ้ามีโค้ดที่ต้องการมันตอนรัน ก็สามารถใส่ได้
-      NEXT_PUBLIC_BACKEND_URL: http://localhost:3001
-      BACKEND_URL_INTERNAL: http://backend:3001
+      - backend
     networks:
       - todo-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`tomyummaster.duckdns.org`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
 
 volumes:
   db-data:

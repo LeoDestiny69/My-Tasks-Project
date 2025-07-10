@@ -1,0 +1,27 @@
+# traefik.yml
+api:
+  insecure: true # Enables the Traefik dashboard at http://<your-ip>:8080
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false # Only expose containers with traefik.enable=true label
+
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: "premier674@gmail.com" # IMPORTANT: Change this!
+      storage: /etc/traefik/acme/acme.json
+      httpChallenge:
+        entryPoint: web
