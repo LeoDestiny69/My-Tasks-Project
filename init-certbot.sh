@@ -1,6 +1,6 @@
 #!/bin/bash
 
-domain=tomyummaster.duckdns.org
+domain=mytasksproject.duckdns.org
 rsa_key_size=4096
 data_path="./certbot"
 email="premier674@gmail.com" # Change this to your email

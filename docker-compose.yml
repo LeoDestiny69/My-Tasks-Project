@@ -66,7 +66,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_URL: https://tomyummaster.duckdns.org/api
+        NEXT_PUBLIC_BACKEND_URL: https://mytasksproject.duckdns.org/api
     depends_on:
       - backend
     networks:
