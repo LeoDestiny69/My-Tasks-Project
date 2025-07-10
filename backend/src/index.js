@@ -37,7 +37,7 @@ pool.connect((err, client, release) => {
 // API Routes
 
 // GET all todos
-app.get('/todos', async (req, res) => {
+app.get('/api/todos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM todos ORDER BY created_at DESC'); 
     res.json(result.rows);
@@ -48,7 +48,7 @@ app.get('/todos', async (req, res) => {
 });
 
 // GET a single todo by ID
-app.get('/todos/:id', async (req, res) => {
+app.get('/api/todos/:id', async (req, res) => { // <-- แก้ไข: เพิ่ม /api
   const { id } = req.params;
   try {
     const result = await pool.query('SELECT * FROM todos WHERE id = $1', [id]);
@@ -63,9 +63,8 @@ app.get('/todos/:id', async (req, res) => {
 });
 
 // POST a new todo
-app.post('/todos', async (req, res) => {
+app.post('/api/todos', async (req, res) => { // <-- แก้ไข: เพิ่ม /api
   const { title, description, due_date, priority } = req.body;
-
   
   if (!title || typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Title is required and must be a non-empty string.' });
@@ -74,7 +73,6 @@ app.post('/todos', async (req, res) => {
     return res.status(400).json({ error: 'Description must be a string.' });
   }
   if (due_date !== undefined && due_date !== null) {
-      
       if (isNaN(new Date(due_date))) {
           return res.status(400).json({ error: 'Invalid due_date format.' });
       }
@@ -96,13 +94,12 @@ app.post('/todos', async (req, res) => {
 });
 
 // PUT (update) an existing todo
-app.put('/todos/:id', async (req, res) => {
+app.put('/api/todos/:id', async (req, res) => { // <-- แก้ไข: เพิ่ม /api
   const { id } = req.params;
   
   const { title, description, is_completed, due_date, priority } = req.body;
 
   try {
-    
     const existingTodo = await pool.query('SELECT * FROM todos WHERE id = $1', [id]);
     if (existingTodo.rows.length === 0) {
       return res.status(404).json({ error: 'Todo not found' });
@@ -133,7 +130,6 @@ app.put('/todos/:id', async (req, res) => {
         return res.status(400).json({ error: 'Priority must be Low, Medium, or High.' });
     }
 
-
     const result = await pool.query(
       'UPDATE todos SET title = $1, description = $2, is_completed = $3, due_date = $4, priority = $5 WHERE id = $6 RETURNING *',
       [updatedTitle, updatedDescription, updatedIsCompleted, updatedDueDate, updatedPriority, id]
@@ -146,9 +142,8 @@ app.put('/todos/:id', async (req, res) => {
   }
 });
 
-
 // DELETE a todo
-app.delete('/todos/:id', async (req, res) => {
+app.delete('/api/todos/:id', async (req, res) => { // <-- แก้ไข: เพิ่ม /api
   const { id } = req.params;
   try {
     const result = await pool.query('DELETE FROM todos WHERE id = $1 RETURNING *', [id]);
@@ -164,5 +159,5 @@ app.delete('/todos/:id', async (req, res) => {
 
 // Start server
 app.listen(port, () => {
-  console.log(`Backend server listening at http://localhost:${port}`);
+  console.log(`Backend server listening at ${port}`);
 });
