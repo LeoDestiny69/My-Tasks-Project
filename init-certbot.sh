@@ -3,7 +3,7 @@
 domain=mytasksproject.duckdns.org
 rsa_key_size=4096
 data_path="./certbot"
-email="premier674@gmail.com" # Change this to your email
+email="premier674@gmail.com" 
 
 if [ ! -e "${data_path}/conf/options-ssl-nginx.conf" ] || [ ! -e "${data_path}/conf/ssl-dhparams.pem" ]; then
   echo "### Downloading recommended TLS parameters ..."
