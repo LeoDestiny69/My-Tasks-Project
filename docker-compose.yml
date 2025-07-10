@@ -1,24 +1,30 @@
 # docker-compose.yml
 services:
-  traefik:
-    image: traefik:v2.10
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=premier674@gmail.com" 
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+  nginx:
+    image: nginx:latest
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" # Traefik Dashboard
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
+      - ./nginx:/etc/nginx/conf.d
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - todo-network
+
+  
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - nginx
+    command: ["tail", "-f", "/dev/null"] # Keep container running for manual execution
     networks:
       - todo-network
 
@@ -53,13 +59,7 @@ services:
         condition: service_healthy
     networks:
       - todo-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`tomyummaster.duckdns.org`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.priority=20"
-      - "traefik.http.services.backend.loadbalancer.server.port=3001"
-      - "traefik.http.middlewares.strip-prefix-api.stripprefix.prefixes=/api"
-      - "traefik.http.routers.backend.middlewares=strip-prefix-api"
+    
 
   frontend:
     build:
@@ -71,12 +71,7 @@ services:
       - backend
     networks:
       - todo-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`tomyummaster.duckdns.org`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    
 
 volumes:
   db-data:
